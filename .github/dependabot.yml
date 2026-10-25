@@ -1,0 +1,21 @@
+# Keeps the pinned base image and workflow actions current. Dependabot bumps
+# the FROM tag and its digest together. It does not track the cargo-deny
+# version and checksum args in the Dockerfile; refresh those by hand.
+version: 2
+
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      docker:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

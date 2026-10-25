@@ -1,0 +1,77 @@
+name: Publish Image
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    # The image is built only from the Dockerfile, so docs-only pushes don't
+    # republish it and change its digest. Use workflow_dispatch to force one.
+    paths:
+      - Dockerfile
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Validate GHCR token
+        shell: bash
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        run: |
+          if [ -z "${GHCR_PAT}" ]; then
+            echo "GHCR_PAT secret is required and must include write:packages scope."
+            exit 1
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Resolve image metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          owner_lc="${GITHUB_REPOSITORY_OWNER,,}"
+          image_name="ghcr.io/${owner_lc}/rust-tooling"
+
+          # the Dockerfile FROM line is the source of truth, so the tag always matches the base
+          rust_version="$(sed -nE 's/^FROM rust:([0-9.]+)-slim.*/\1/p' Dockerfile)"
+          build_date="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          echo "image_name=${image_name}" >> "$GITHUB_OUTPUT"
+          echo "rust_version=${rust_version}" >> "$GITHUB_OUTPUT"
+          echo "build_date=${build_date}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_name }}:latest
+            ${{ steps.meta.outputs.image_name }}:rust${{ steps.meta.outputs.rust_version }}
+          build-args: |
+            BUILD_DATE=${{ steps.meta.outputs.build_date }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.rust_version }}
