@@ -5,10 +5,12 @@ ARG CARGO_DENY_SHA256=9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca82
 
 # The slim image ships the minimal rustup profile, so rustfmt and clippy are
 # added here rather than downloaded on every downstream build. The X11 and
-# xkbcommon headers are what eframe/winit need to compile on Linux.
+# xkbcommon headers are what eframe/winit need to compile on Linux. file(1)
+# is what appimagetool shells out to when wrapping an AppImage.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
+        file \
         git \
         pkg-config \
         libssl-dev \

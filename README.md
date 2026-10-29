@@ -55,7 +55,7 @@ base image:
 - `rustfmt` and `clippy`, which the slim base leaves out (it uses the minimal rustup profile)
 - `cargo-deny` 0.20.2, for advisories, licenses, bans and sources, installed from its prebuilt release and checked against a pinned SHA-256
 - the `x86_64-unknown-linux-musl` target, for fully static CLIs
-- `libxcb-render0-dev`, `libxcb-shape0-dev`, `libxcb-xfixes0-dev`, `libxkbcommon-dev` and `libssl-dev`, which eframe and winit need to compile on Linux, plus `pkg-config`, `git` and `curl`
+- `libxcb-render0-dev`, `libxcb-shape0-dev`, `libxcb-xfixes0-dev`, `libxkbcommon-dev` and `libssl-dev`, which eframe and winit need to compile on Linux, plus `pkg-config`, `git`, `curl` and `file` (which appimagetool shells out to)
 
 ## Key Considerations
 
@@ -86,7 +86,7 @@ There are no automated tests. After a build, confirm the tools are in the image:
 
 ```bash
 docker run --rm ghcr.io/twistingmercury/rust-tooling:latest sh -c \
-  'cargo --version && cargo fmt --version && cargo clippy --version && cargo deny --version && rustup target list --installed && pkg-config --exists xkbcommon && git --version'
+  'cargo --version && cargo fmt --version && cargo clippy --version && cargo deny --version && rustup target list --installed && pkg-config --exists xkbcommon && git --version && file --version'
 ```
 
 ### GHCR Troubleshooting
