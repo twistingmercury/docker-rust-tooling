@@ -19,12 +19,12 @@ There are no tests. To verify a change, build and confirm the tools are there:
 ```bash
 make build
 docker run --rm ghcr.io/twistingmercury/rust-tooling:latest sh -c \
-  'cargo --version && cargo fmt --version && cargo clippy --version && cargo deny --version && rustup target list --installed && pkg-config --exists xkbcommon && git --version'
+  'cargo --version && cargo fmt --version && cargo clippy --version && cargo deny --version && rustup target list --installed && pkg-config --exists xkbcommon && git --version && file --version'
 ```
 
 ## How the image is built and tagged
 
-- `Dockerfile` does everything in one `RUN`: `apt-get install` of the GUI and OpenSSL dev headers plus pkg-config, git and curl; `rustup component add rustfmt clippy` (the slim base uses the minimal profile); `rustup target add x86_64-unknown-linux-musl`; and cargo-deny from its prebuilt musl release tarball, checked against the SHA-256 pinned in the `CARGO_DENY_SHA256` arg.
+- `Dockerfile` does everything in one `RUN`: `apt-get install` of the GUI and OpenSSL dev headers plus pkg-config, git, curl and file; `rustup component add rustfmt clippy` (the slim base uses the minimal profile); `rustup target add x86_64-unknown-linux-musl`; and cargo-deny from its prebuilt musl release tarball, checked against the SHA-256 pinned in the `CARGO_DENY_SHA256` arg.
 - The base is pinned in the `FROM` line to a version tag plus the multi-arch index digest; the Rust version is whatever that tag says.
 - **Version tagging:** `make build` runs `build.sh`, which sets `RUST_VERSION` from the Dockerfile's `FROM` line (e.g. `rust1.99.1`) and passes it as the tag and, prefix stripped, as the `VERSION` build arg. `build.sh` also sets `BUILD_DATE` and `VCS_REF` (short HEAD SHA), and `IS_LOCAL=1` removes the local images when it exits. The publish workflow reads the version the same way.
 - CI publishes `:latest` and `:rust<version>` on pushes to `develop` or `main` that touch the `Dockerfile` or the workflow, and on `workflow_dispatch`. It needs the `GHCR_PAT` repo secret.
